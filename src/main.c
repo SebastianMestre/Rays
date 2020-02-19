@@ -28,6 +28,17 @@ Sphere spheres[SPHERE_COUNT] = {
 	{{-0.5f, -0.5f, 5.0f}, 1.0f},
 };
 
+V3 sample_hemisphere_cosine_weighted (float r1, float r2) {
+	float r = sqrt(r1);
+	float phi = r2 * M_PI * 2.0f;
+
+	return (V3){
+		r * cos(phi),
+		r * sin(phi),
+		sqrt(1-r1)
+	};
+}
+
 Intersection trace (Ray r) {
 	Intersection result = no_intersection();
 
@@ -78,24 +89,18 @@ int main () {
 				continue;
 			}
 
-			int attempts = 500;
+			int attempts = 50;
 			int hits = 0;
 			// Ambient Occlusion
 			V3 up = {0.0f, 0.0f, 1.0f};
 			V3 side = V3_normalized(V3_cross(up, result.normal));
 			up = V3_normalized(V3_cross(side, result.normal));
 			for(int i = 0; i < attempts; ++i){
+
 				float r1 = (float)rand()/RAND_MAX;
 				float r2 = (float)rand()/RAND_MAX;
 
-				float R = sqrt(r1);
-				float phi = r2 * M_PI * 2.0f;
-
-				V3 bounce_direction_tangent = {
-					R * cos(phi),
-					R * sin(phi),
-					sqrt(1-r1)
-				};
+				V3 bounce_direction_tangent = sample_hemisphere_cosine_weighted(r1, r2);
 
 				V3 bounce_direction = V3_sum(V3_sum(
 					V3_scale(result.normal, bounce_direction_tangent.z),
@@ -109,8 +114,8 @@ int main () {
 			}
 
 			float ratio = (float)hits / (float)attempts;
-			// printf("%d/%d -> %f\n", hits, attempts, ratio);
 
+			// sqrt is a quick and dirty approximation of gamma correction
 			float ix = sqrt(ratio);
 			float iy = sqrt(ratio);
 			float iz = sqrt(ratio);
