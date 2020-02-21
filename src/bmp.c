@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 void bmp_write (
+	char const* fname,
 	uint8_t* red,
 	uint8_t* green,
 	uint8_t* blue,
@@ -59,7 +60,7 @@ void bmp_write (
 	bmpinfoheader[10] = (unsigned char)(       h>>16);
 	bmpinfoheader[11] = (unsigned char)(       h>>24);
 
-	f = fopen("img.bmp","wb");
+	f = fopen(fname,"wb");
 	fwrite(bmpfileheader,1,14,f);
 	fwrite(bmpinfoheader,1,40,f);
 	for(int i=0; i<h; i++)
