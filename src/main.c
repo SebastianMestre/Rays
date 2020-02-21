@@ -103,38 +103,41 @@ int main () {
 			continue;
 		}
 
-		int attempts = 2;
-		int hits = 0;
 		// Ambient Occlusion
 		V3 up = {0.0f, 0.0f, 1.0f};
 		V3 side = V3_normalized(V3_cross(up, result.normal));
 		up = V3_normalized(V3_cross(side, result.normal));
-		for(int i = 0; i < attempts; ++i){
 
-			float r1 = (float)rand()/RAND_MAX;
-			float r2 = (float)rand()/RAND_MAX;
+		float r1 = (float)rand()/RAND_MAX;
+		float r2 = (float)rand()/RAND_MAX;
 
-			V3 bounce_direction_tangent = sample_hemisphere_cosine_weighted(r1, r2);
+		V3 bounce_direction_tangent = sample_hemisphere_cosine_weighted(r1, r2);
 
-			V3 bounce_direction = V3_sum(V3_sum(
-				V3_scale(result.normal, bounce_direction_tangent.z),
-				V3_scale(side, bounce_direction_tangent.x)),
-				V3_scale(up, bounce_direction_tangent.y));
+		V3 bounce_direction = V3_sum(V3_sum(
+			V3_scale(result.normal, bounce_direction_tangent.z),
+			V3_scale(side, bounce_direction_tangent.x)),
+			V3_scale(up, bounce_direction_tangent.y));
 
-			Intersection bounce_result = trace((Ray){V3_sum(result.position, V3_scale(bounce_direction, 0.001)), bounce_direction});
-			if(bounce_result.exists){
-				hits += 1;
-			}
+		Ray bounce_ray = {
+			V3_sum(result.position, V3_scale(bounce_direction, 0.001)),
+			bounce_direction,
+		};
+
+		Intersection bounce_result = trace(bounce_ray);
+
+		if (bounce_result.exists){
+			// hit something, no light
+			samples[s] = (Sample){
+				0.0f, 0.0f, 0.0f,
+				px, py
+			};
+		} else {
+			// hit nothing, skylight
+			samples[s] = (Sample){
+				1.0f, 1.0f, 1.0f,
+				px, py
+			};
 		}
-
-		puts("ye");
-		float ratio = (float)hits / (float)attempts;
-		samples[s] = (Sample){ratio,ratio,ratio,px,py};
-
-		// sqrt is a quick and dirty approximation of gamma correction
-		float ix = sqrt(ratio);
-		float iy = sqrt(ratio);
-		float iz = sqrt(ratio);
 	}
 
 
@@ -172,6 +175,14 @@ int main () {
 			r[x][y] = pr * 255;
 			g[x][y] = pg * 255;
 			b[x][y] = pb * 255;
+		}
+	}
+
+	for(int x = 0; x < W; ++x){
+		for(int y = 0; y < H; ++y){
+			r[x][y] = 255 - r[x][y];
+			g[x][y] = 255 - g[x][y];
+			b[x][y] = 255 - b[x][y];
 		}
 	}
 
