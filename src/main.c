@@ -10,7 +10,7 @@
 
 #define W 128
 #define H 128
-#define SPP 1
+#define SPP 10
 #define SC (W*H*SPP)
 
 typedef struct {
@@ -21,7 +21,6 @@ typedef struct {
 uint8_t r[W][H];
 uint8_t g[W][H];
 uint8_t b[W][H];
-uint8_t sampled[W][H];
 Sample samples[SC];
 
 #define PLANE_COUNT 3
@@ -80,73 +79,64 @@ int main () {
 	V3 camera_front = {};
 
 	int s = 0;
-	for (int x = 0; x < W; ++x){
-		for (int y = 0; y < H; ++y, ++s){
-			float px = (float)x / (W-1);
-			float py = (float)y / (H-1);
+	for (int s = 0; s < SC; ++s){
+		float px = (float)rand() / (RAND_MAX);
+		float py = (float)rand() / (RAND_MAX);
 
-			printf("(%.2f %.2f)\n", px, py);
+		printf("(%.2f %.2f)\n", px, py);
 
-			V3 screen = {
-				px*2.0f-1.0f,
-				py*2.0f-1.0f,
-				1.0f
+		V3 screen = {
+			px*2.0f-1.0f,
+			py*2.0f-1.0f,
+			1.0f
+		};
+
+		V3 view = V3_normalized(screen);
+
+		Intersection result = trace((Ray){camera_pos, view});
+
+		if (!result.exists) {
+			samples[s] = (Sample){
+				1.0f, 1.0f, 1.0f,
+				px, py
 			};
-
-			V3 view = V3_normalized(screen);
-
-			Intersection result = trace((Ray){camera_pos, view});
-
-			if (!result.exists) {
-				r[x][y] = 0;
-				g[x][y] = 0;
-				b[x][y] = 0;
-				puts("no");
-				samples[s] = (Sample){1.0f,1.0f,1.0f,px,py};
-				continue;
-			}
-
-			int attempts = 2;
-			int hits = 0;
-			// Ambient Occlusion
-			V3 up = {0.0f, 0.0f, 1.0f};
-			V3 side = V3_normalized(V3_cross(up, result.normal));
-			up = V3_normalized(V3_cross(side, result.normal));
-			for(int i = 0; i < attempts; ++i){
-
-				float r1 = (float)rand()/RAND_MAX;
-				float r2 = (float)rand()/RAND_MAX;
-
-				V3 bounce_direction_tangent = sample_hemisphere_cosine_weighted(r1, r2);
-
-				V3 bounce_direction = V3_sum(V3_sum(
-					V3_scale(result.normal, bounce_direction_tangent.z),
-					V3_scale(side, bounce_direction_tangent.x)),
-					V3_scale(up, bounce_direction_tangent.y));
-
-				Intersection bounce_result = trace((Ray){V3_sum(result.position, V3_scale(bounce_direction, 0.001)), bounce_direction});
-				if(bounce_result.exists){
-					hits += 1;
-				}
-			}
-
-			puts("ye");
-			float ratio = (float)hits / (float)attempts;
-			samples[s] = (Sample){ratio,ratio,ratio,px,py};
-
-			// sqrt is a quick and dirty approximation of gamma correction
-			float ix = sqrt(ratio);
-			float iy = sqrt(ratio);
-			float iz = sqrt(ratio);
-
-			r[x][y] = ix*255;
-			g[x][y] = iy*255;
-			b[x][y] = iz*255;
+			continue;
 		}
+
+		int attempts = 2;
+		int hits = 0;
+		// Ambient Occlusion
+		V3 up = {0.0f, 0.0f, 1.0f};
+		V3 side = V3_normalized(V3_cross(up, result.normal));
+		up = V3_normalized(V3_cross(side, result.normal));
+		for(int i = 0; i < attempts; ++i){
+
+			float r1 = (float)rand()/RAND_MAX;
+			float r2 = (float)rand()/RAND_MAX;
+
+			V3 bounce_direction_tangent = sample_hemisphere_cosine_weighted(r1, r2);
+
+			V3 bounce_direction = V3_sum(V3_sum(
+				V3_scale(result.normal, bounce_direction_tangent.z),
+				V3_scale(side, bounce_direction_tangent.x)),
+				V3_scale(up, bounce_direction_tangent.y));
+
+			Intersection bounce_result = trace((Ray){V3_sum(result.position, V3_scale(bounce_direction, 0.001)), bounce_direction});
+			if(bounce_result.exists){
+				hits += 1;
+			}
+		}
+
+		puts("ye");
+		float ratio = (float)hits / (float)attempts;
+		samples[s] = (Sample){ratio,ratio,ratio,px,py};
+
+		// sqrt is a quick and dirty approximation of gamma correction
+		float ix = sqrt(ratio);
+		float iy = sqrt(ratio);
+		float iz = sqrt(ratio);
 	}
 
-
-	bmp_write("img.bmp",(uint8_t*)r,(uint8_t*)g,(uint8_t*)b, W,H);
 
 	for(int x = 0; x < W; ++x){
 		for(int y = 0; y < H; ++y){
@@ -154,28 +144,36 @@ int main () {
 			float py = (float)y/(H-1);
 
 			double pr = 0.0;
+			double pg = 0.0;
+			double pb = 0.0;
 			double coeffs = 0.0;
 
 			for(int s = 0; s < SC; ++s){
 				float sx = samples[s].x;
 				float sy = samples[s].y;
 
-				float dx = sx - px;
-				float dy = sy - py;
+				float dx = (sx - px)*W*2;
+				float dy = (sy - py)*H*2;
 
 				float d2 = dx*dx + dy*dy;
 
-				float coeff = exp(-d2*5000.0);
+				float coeff = exp(-d2);
 
 				pr += samples[s].r * coeff;
+				pg += samples[s].g * coeff;
+				pb += samples[s].b * coeff;
 				coeffs += coeff;
 			}
 
 			pr /= coeffs;
+			pg /= coeffs;
+			pb /= coeffs;
 
-			sampled[x][y] = pr * 255;
+			r[x][y] = pr * 255;
+			g[x][y] = pg * 255;
+			b[x][y] = pb * 255;
 		}
 	}
 
-	bmp_write("helper.bmp", (uint8_t*)sampled,(uint8_t*)sampled,(uint8_t*)sampled, W,H);
+	bmp_write("helper.bmp", (uint8_t*)r,(uint8_t*)g,(uint8_t*)b, W,H);
 }
