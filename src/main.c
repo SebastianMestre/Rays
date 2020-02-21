@@ -8,12 +8,21 @@
 #include "vectors.h"
 #include "intersection.h"
 
-#define W 512
-#define H 512
+#define W 128
+#define H 128
+#define SPP 1
+#define SC (W*H*SPP)
+
+typedef struct {
+	float r,g,b;
+	float x,y;
+} Sample;
 
 uint8_t r[W][H];
 uint8_t g[W][H];
 uint8_t b[W][H];
+uint8_t sampled[W][H];
+Sample samples[SC];
 
 #define PLANE_COUNT 3
 Plane planes[PLANE_COUNT] = {
@@ -70,11 +79,17 @@ int main () {
 	V3 camera_right = {};
 	V3 camera_front = {};
 
+	int s = 0;
 	for (int x = 0; x < W; ++x){
-		for (int y = 0; y < H; ++y){
+		for (int y = 0; y < H; ++y, ++s){
+			float px = (float)x / (W-1);
+			float py = (float)y / (H-1);
+
+			printf("(%.2f %.2f)\n", px, py);
+
 			V3 screen = {
-				(float)x/(W-1)*2.0f-1.0f,
-				(float)y/(H-1)*2.0f-1.0f,
+				px*2.0f-1.0f,
+				py*2.0f-1.0f,
 				1.0f
 			};
 
@@ -86,10 +101,12 @@ int main () {
 				r[x][y] = 0;
 				g[x][y] = 0;
 				b[x][y] = 0;
+				puts("no");
+				samples[s] = (Sample){1.0f,1.0f,1.0f,px,py};
 				continue;
 			}
 
-			int attempts = 50;
+			int attempts = 2;
 			int hits = 0;
 			// Ambient Occlusion
 			V3 up = {0.0f, 0.0f, 1.0f};
@@ -113,7 +130,9 @@ int main () {
 				}
 			}
 
+			puts("ye");
 			float ratio = (float)hits / (float)attempts;
+			samples[s] = (Sample){ratio,ratio,ratio,px,py};
 
 			// sqrt is a quick and dirty approximation of gamma correction
 			float ix = sqrt(ratio);
@@ -126,5 +145,37 @@ int main () {
 		}
 	}
 
-	bmp_write((uint8_t*)r,(uint8_t*)g,(uint8_t*)b, W,H);
+
+	bmp_write("img.bmp",(uint8_t*)r,(uint8_t*)g,(uint8_t*)b, W,H);
+
+	for(int x = 0; x < W; ++x){
+		for(int y = 0; y < H; ++y){
+			float px = (float)x/(W-1);
+			float py = (float)y/(H-1);
+
+			double pr = 0.0;
+			double coeffs = 0.0;
+
+			for(int s = 0; s < SC; ++s){
+				float sx = samples[s].x;
+				float sy = samples[s].y;
+
+				float dx = sx - px;
+				float dy = sy - py;
+
+				float d2 = dx*dx + dy*dy;
+
+				float coeff = exp(-d2*5000.0);
+
+				pr += samples[s].r * coeff;
+				coeffs += coeff;
+			}
+
+			pr /= coeffs;
+
+			sampled[x][y] = pr * 255;
+		}
+	}
+
+	bmp_write("helper.bmp", (uint8_t*)sampled,(uint8_t*)sampled,(uint8_t*)sampled, W,H);
 }
