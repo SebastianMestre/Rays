@@ -6,9 +6,10 @@
 
 #include "bmp.h"
 #include "geometry.h"
-#include "vectors.h"
 #include "intersection.h"
+#include "random.h"
 #include "sampling.h"
+#include "vectors.h"
 
 #define W 256
 #define H 256
@@ -94,8 +95,8 @@ V3 full_trace (Ray r) {
 		V3 side = V3_normalized(V3_cross(up, result.normal));
 		up = V3_normalized(V3_cross(side, result.normal));
 
-		float r1 = (float)rand()/RAND_MAX;
-		float r2 = (float)rand()/RAND_MAX;
+		float r1 = random01();
+		float r2 = random01();
 
 		V3 bounce_direction_tangent = sample_hemisphere_cosine_weighted(r1, r2);
 
@@ -132,8 +133,8 @@ int main () {
 	for (int bx = 0; bx < BCOLS; ++bx){
 		for (int by = 0; by < BROWS; ++by){
 			for (int sb = 0; sb < SPB; ++sb) {
-				float px_in_bucket = (float)rand() / (float)RAND_MAX;
-				float py_in_bucket = (float)rand() /  (float)RAND_MAX;
+				float px_in_bucket = random01();
+				float py_in_bucket = random01();
 
 				float px = ((float)bx + px_in_bucket) / (float)BCOLS;
 				float py = ((float)by + py_in_bucket) /  (float)BROWS;
