@@ -8,17 +8,18 @@
 #include "geometry.h"
 #include "vectors.h"
 #include "intersection.h"
+#include "sampling.h"
 
-#define W 512
-#define H 512
+#define W 256
+#define H 256
 
-#define BW 2
-#define BH 2
+#define BW 1
+#define BH 1
 
 #define BCOLS (W/BW)
 #define BROWS (H/BH)
 
-#define SPP 10
+#define SPP 256
 #define SPB (BW*BH*SPP)
 #define SC (W*H*SPP)
 
@@ -44,18 +45,6 @@ Sphere spheres[SPHERE_COUNT] = {
 	{{1.0f, 0.0f, 5.0f}, 1.0f},
 	{{-0.5f, -0.5f, 5.0f}, 1.0f},
 };
-
-V3 sample_hemisphere_cosine_weighted (float r1, float r2) {
-	float r = sqrt(r1);
-	float phi = r2 * M_PI * 2.0f;
-
-	return (V3){
-		r * cos(phi),
-		r * sin(phi),
-		sqrt(1-r1)
-	};
-}
-
 
 Intersection trace (Ray r) {
 	Intersection result = no_intersection();
@@ -92,6 +81,7 @@ V3 full_trace (Ray r) {
 	}
 
 	// TODO: Not so sure about this stuff
+	// inverse of pi = 1.0 / pi =~ 0.31...
 	const float i_pi = 0.31830988618;
 	float factor = 1.0f;
 

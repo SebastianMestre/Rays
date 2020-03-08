@@ -2,10 +2,13 @@
 CFLAGS=-O2
 LIBS=-lm
 
-rays: main.o geometry.o intersection.o ray.o vectors.o bmp.o
+rays: main.o geometry.o intersection.o ray.o vectors.o bmp.o sampling.o
 	cc -o $@ $^ $(LIBS)
 
-main.o: main.c bmp.h geometry.h vectors.h intersection.h
+main.o: main.c bmp.h geometry.h vectors.h intersection.h sampling.h
+
+sampling.o: sampling.c sampling.h vectors.h
+sampling.h: vectors.h
 
 bmp.o: bmp.c bmp.h
 bmp.h:
