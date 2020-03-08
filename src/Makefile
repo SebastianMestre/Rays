@@ -1,29 +1,67 @@
-
 CFLAGS=-O2
 LIBS=-lm
 
-rays: main.o geometry.o intersection.o ray.o vectors.o bmp.o sampling.o random.o
+BINDIR := ../bin
+OBJDIR := ../build
+
+OBJNAMES := \
+	main.o \
+	geometry.o \
+	intersection.o \
+	ray.o \
+	material.o \
+	vectors.o \
+	bmp.o \
+	sampling.o \
+	random.o
+
+OBJS := $(addprefix $(OBJDIR)/,$(OBJNAMES))
+
+all: $(BINDIR)/rays
+
+clean:
+	rm $(BINDIR) -r
+	rm $(OBJDIR) -r
+
+$(BINDIR)/rays: $(OBJS) | $(BINDIR)
 	cc -o $@ $^ $(LIBS)
 
-main.o: main.c bmp.h geometry.h vectors.h intersection.h sampling.h random.h
+$(BINDIR):
+	mkdir $(BINDIR)
 
-sampling.o: sampling.c sampling.h vectors.h
+$(OBJS): | $(OBJDIR)
+
+$(OBJDIR):
+	mkdir $(OBJDIR)
+
+$(OBJDIR)/%.o: %.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+#### #### #### #### #### #### #### #### #### #### #### #### #### #### #### ####
+
+$(OBJDIR)/main.o: main.c bmp.h geometry.h vectors.h intersection.h sampling.h random.h material.h
+
+$(OBJDIR)/sampling.o: sampling.c sampling.h vectors.h
 sampling.h: vectors.h
 
-bmp.o: bmp.c bmp.h
+$(OBJDIR)/bmp.o: bmp.c bmp.h
 bmp.h:
 
-geometry.o: geometry.c geometry.h
+$(OBJDIR)/geometry.o: geometry.c geometry.h
 geometry.h: vectors.h
 
-intersection.o: intersection.c intersection.h
+$(OBJDIR)/intersection.o: intersection.c intersection.h
 intersection.h: geometry.h ray.h vectors.h
 
-vectors.o: vectors.c vectors.h
+$(OBJDIR)/vectors.o: vectors.c vectors.h
 vectors.h:
 
-ray.o: ray.c ray.h
+$(OBJDIR)/ray.o: ray.c ray.h
 ray.h: vectors.h
 
-random.o: random.c random.h
+$(OBJDIR)/random.o: random.c random.h
 random.h:
+
+$(OBJDIR)/material.o: material.c material.h vectors.h
+material.h:
+

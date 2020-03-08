@@ -12,6 +12,7 @@ typedef struct {
 	V3 normal;
 	float distance;
 	bool exists;
+	int material_id;
 } Intersection;
 
 Intersection no_intersection();

@@ -6,6 +6,10 @@ V3 V3_scale(V3 a, float s){
 	return (V3){a.x * s, a.y * s, a.z * s};
 }
 
+V3 V3_scale3(V3 a, V3 s){
+	return (V3){a.x * s.x, a.y * s.y, a.z * s.z};
+}
+
 V3 V3_sum(V3 a, V3 b){
 	return (V3){a.x + b.x, a.y + b.y, a.z + b.z};
 }

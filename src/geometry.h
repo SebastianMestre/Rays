@@ -4,16 +4,19 @@
 #include "vectors.h"
 
 typedef struct {
+	int material_id;
 	V3 origin;
 	float radius;
 } Sphere;
 
 typedef struct {
+	int material_id;
 	V3 origin;
 	V3 normal;
 } Plane;
 
 typedef struct {
+	int material_id;
 	V3 begin;
 	V3 end;
 } AABB;

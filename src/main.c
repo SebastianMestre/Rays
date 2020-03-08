@@ -7,6 +7,7 @@
 #include "bmp.h"
 #include "geometry.h"
 #include "intersection.h"
+#include "material.h"
 #include "random.h"
 #include "sampling.h"
 #include "vectors.h"
@@ -36,15 +37,22 @@ Sample samples[BCOLS][BROWS][BW*BH*SPP];
 
 #define PLANE_COUNT 3
 Plane planes[PLANE_COUNT] = {
-	{{-1.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-	{{0.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-	{{-0.71f, -0.71f, 0.0f}, {0.71f, 0.71f, 0.0f}},
+	{1, {-1.00f, +0.00f, +0.00f}, {+1.00f, +0.00f, +0.00f}},
+	{0, {+0.00f, -1.00f, +0.00f}, {+0.00f, +1.00f, +0.00f}},
+	{0, {-0.71f, -0.71f, +0.00f}, {+0.71f, +0.71f, +0.00f}},
 };
 
 #define SPHERE_COUNT 2
 Sphere spheres[SPHERE_COUNT] = {
-	{{1.0f, 0.0f, 5.0f}, 1.0f},
-	{{-0.5f, -0.5f, 5.0f}, 1.0f},
+	{2, {+1.0f, +0.0f, +5.0f}, 1.0f},
+	{1, {-0.5f, -0.5f, +5.0f}, 1.0f},
+};
+
+#define MATERIAL_COUNT 3
+Material materials[MATERIAL_COUNT] = {
+	{false, {0.80f, 0.80f, 0.80f}, 0.04f},
+	{false, {0.00f, 0.00f, 0.00f}, 0.60f},
+	{true,  {3.00f, 1.00f, 0.50f}, 0.00f}
 };
 
 Intersection trace (Ray r) {
@@ -73,7 +81,7 @@ Intersection trace (Ray r) {
 
 V3 full_trace (Ray r) {
 
-	const V3 sky_color = V3_scale((V3){0.1f, 0.6f, 1.0f}, 10);
+	const V3 sky_color = V3_scale((V3){0.2f, 0.2f, 0.2f}, 10);
 
 	Intersection result = trace(r);
 
@@ -84,16 +92,25 @@ V3 full_trace (Ray r) {
 	// TODO: Not so sure about this stuff
 	// inverse of pi = 1.0 / pi =~ 0.31...
 	const float i_pi = 0.31830988618;
-	float factor = 1.0f;
+	V3 factor = {1.0f, 1.0f, 1.0f};
 
 	// for up to three bounces, we try to find a light source
 	for(int steps = 0; steps < 3; ++steps){
 
-		float fresnel = specular_sample_probablity(result.normal, V3_scale(r.direction, -1.0f));
+		Material material = materials[result.material_id];
+
+		if(material.is_emissive)
+			return material.base_color;
+
+		float fresnel = specular_sample_probablity(
+			result.normal,
+			V3_scale(r.direction, -1.0f),
+			material.base_specular);
+
 		float r0 = random01();
 
 		if(fresnel < r0){
-			factor *= i_pi;
+			factor = V3_scale3(V3_scale(factor, i_pi), material.base_color);
 
 			// should probably build coordinates based on the intersected
 			// object's local coordinates.
@@ -132,7 +149,7 @@ V3 full_trace (Ray r) {
 
 		// no hits, found the sky
 		if (!result.exists){
-			return V3_scale(sky_color, factor);
+			return V3_scale3(sky_color, factor);
 		}
 	}
 

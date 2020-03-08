@@ -4,7 +4,7 @@
 #include <math.h>
 
 Intersection no_intersection() {
-	return (Intersection){{},{},false};
+	return (Intersection){{},{},false, 0};
 }
 
 Intersection intersection_ray_sphere(Ray r, Sphere s) {
@@ -42,6 +42,7 @@ Intersection intersection_ray_sphere(Ray r, Sphere s) {
 		return no_intersection();
 	}
 
+	result.material_id = s.material_id;
 	result.exists = true;
 	result.position = V3_sum(r.origin, V3_scale(r.direction, result.distance));
 	result.normal = V3_normalized(V3_sub(result.position, s.origin));
@@ -64,6 +65,7 @@ Intersection intersection_ray_plane(Ray r, Plane s) {
 		V3_sum(r.origin, V3_scale(r.direction, L)),
 		s.normal,
 		L,
-		true
+		true,
+		s.material_id
 	};
 }

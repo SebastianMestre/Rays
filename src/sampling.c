@@ -16,9 +16,7 @@ V3 sample_hemisphere_cosine_weighted (float r1, float r2) {
 	};
 }
 
-float specular_sample_probablity(V3 normal, V3 view) {
-	const float r0 = 0.04f;
-
+float specular_sample_probablity(V3 normal, V3 view, float r0) {
 	float cos_t = V3_dot(normal, view);
 
 	if (cos_t < 0.0f)
