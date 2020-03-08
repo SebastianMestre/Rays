@@ -1,11 +1,11 @@
-#rays
+# rays
 A raytracer, written in C.
 
 No way to load scenes, or choose any settings. It produces the same image every time.
 
 WIP.
 
-#Build
+# Build
 
 ```shell
 cd src
