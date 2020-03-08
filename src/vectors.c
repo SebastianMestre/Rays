@@ -34,6 +34,6 @@ float V3_norm2(V3 v){
 	return V3_dot(v, v);
 }
 
-V3 V3_normalized(V3 v) {
+V3 V3_normalized(V3 v){
 	return V3_scale(v, 1.0f/V3_norm(v));
 }
