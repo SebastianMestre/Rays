@@ -113,7 +113,7 @@ V3 full_trace (Ray r) {
 
 		// no hits, found the sky
 		if (!result.exists){
-			return V3_scale(sky_color, i_pi);
+			return V3_scale(sky_color, factor);
 		}
 	}
 
