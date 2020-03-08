@@ -89,28 +89,46 @@ V3 full_trace (Ray r) {
 	// for up to three bounces, we try to find a light source
 	for(int steps = 0; steps < 3; ++steps){
 
-		factor *= i_pi;
+		float fresnel = specular_sample_probablity(result.normal, V3_scale(r.direction, -1.0f));
+		float r0 = random01();
 
-		V3 up = (V3){0.0f, 0.0f, 1.0f};
-		V3 side = V3_normalized(V3_cross(up, result.normal));
-		up = V3_normalized(V3_cross(side, result.normal));
+		if(fresnel < r0){
+			factor *= i_pi;
 
-		float r1 = random01();
-		float r2 = random01();
+			// should probably build coordinates based on the intersected
+			// object's local coordinates.
+			V3 up = (V3){0.0f, 0.0f, 1.0f};
+			V3 side = V3_normalized(V3_cross(up, result.normal));
+			up = V3_normalized(V3_cross(side, result.normal));
 
-		V3 bounce_direction_tangent = sample_hemisphere_cosine_weighted(r1, r2);
+			float r1 = random01();
+			float r2 = random01();
 
-		V3 bounce_direction = V3_sum(V3_sum(
-			V3_scale(result.normal, bounce_direction_tangent.z),
-			V3_scale(side, bounce_direction_tangent.x)),
-			V3_scale(up, bounce_direction_tangent.y));
+			V3 bounce_direction_tangent = sample_hemisphere_cosine_weighted(r1, r2);
 
-		Ray bounce_ray = {
-			V3_sum(result.position, V3_scale(bounce_direction, 0.001)),
-			bounce_direction,
-		};
+			V3 bounce_direction = V3_sum(V3_sum(
+						V3_scale(result.normal, bounce_direction_tangent.z),
+						V3_scale(side, bounce_direction_tangent.x)),
+						V3_scale(up, bounce_direction_tangent.y));
 
-		result = trace(bounce_ray);
+			r = (Ray){
+				V3_sum(result.position, V3_scale(bounce_direction, 0.001)),
+				bounce_direction,
+			};
+
+		} else {
+			// implicit factor *= 1.0f;
+
+			V3 view = V3_scale(r.direction, -1.0f);
+			V3 bounce_direction = sample_dirac_reflection(result.normal, view);
+
+			r = (Ray){
+				V3_sum(result.position, V3_scale(bounce_direction, 0.001)),
+				bounce_direction,
+			};
+		}
+
+		result = trace(r);
 
 		// no hits, found the sky
 		if (!result.exists){
