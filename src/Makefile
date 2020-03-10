@@ -37,6 +37,9 @@ $(OBJDIR):
 $(OBJDIR)/%.o: %.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
+%.h:
+	touch $@
+
 #### #### #### #### #### #### #### #### #### #### #### #### #### #### #### ####
 
 $(OBJDIR)/main.o: main.c bmp.h geometry.h vectors.h intersection.h sampling.h random.h material.h
@@ -63,5 +66,5 @@ $(OBJDIR)/random.o: random.c random.h
 random.h:
 
 $(OBJDIR)/material.o: material.c material.h vectors.h
-material.h:
+material.h: vectors.h
 
