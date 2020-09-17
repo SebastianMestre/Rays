@@ -7,4 +7,5 @@ typedef struct {
 	int is_emissive;
 	V3 base_color;
 	float base_specular;
+	float roughness;
 } Material;

@@ -132,8 +132,7 @@ V3 full_trace (Ray r) {
 		} else {
 			// implicit factor = V3_scale(factor, 1.0f);
 
-			const float roughness = 0.1f;
-			V3 micronormal_tangent = sample_hemisphere_ggx(r1, r2, roughness);
+			V3 micronormal_tangent = sample_hemisphere_ggx(r1, r2, material.roughness);
 
 			V3 micronormal = V3_sum(V3_sum(
 						V3_scale(result.normal, micronormal_tangent.z),
