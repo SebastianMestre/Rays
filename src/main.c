@@ -81,12 +81,10 @@ Intersection trace (Ray r) {
 
 V3 full_trace (Ray r) {
 
-	const V3 sky_color = V3_scale((V3){0.2f, 0.2f, 0.2f}, 10);
-
-	// TODO: Not so sure about this stuff
-	// inverse of pi = 1.0 / pi =~ 0.31...
+	const V3 sky_color = V3_scale((V3){0.3f, 0.6f, 0.9f}, 10);
 	const float i_pi = 0.31830988618;
 	V3 factor = {1.0f, 1.0f, 1.0f};
+
 
 	// for up to three bounces, we try to find a light source
 	int steps = 0;
@@ -113,17 +111,17 @@ V3 full_trace (Ray r) {
 
 		float r0 = random01();
 
+		// tangent space
+		V3 up = (V3){0.0f, 0.0f, 1.0f};
+		V3 side = V3_normalized(V3_cross(up, result.normal));
+		up = V3_normalized(V3_cross(side, result.normal));
+
+		float r1 = random01();
+		float r2 = random01();
+
+		V3 bounce_direction;
 		if(fresnel < r0){
 			factor = V3_scale3(V3_scale(factor, i_pi), material.base_color);
-
-			// should probably build coordinates based on the intersected
-			// object's local coordinates.
-			V3 up = (V3){0.0f, 0.0f, 1.0f};
-			V3 side = V3_normalized(V3_cross(up, result.normal));
-			up = V3_normalized(V3_cross(side, result.normal));
-
-			float r1 = random01();
-			float r2 = random01();
 
 			V3 bounce_direction_tangent = sample_hemisphere_cosine_weighted(r1, r2);
 
@@ -131,24 +129,25 @@ V3 full_trace (Ray r) {
 						V3_scale(result.normal, bounce_direction_tangent.z),
 						V3_scale(side, bounce_direction_tangent.x)),
 						V3_scale(up, bounce_direction_tangent.y));
-
-			r = (Ray){
-				V3_sum(result.position, V3_scale(bounce_direction, 0.001)),
-				bounce_direction,
-			};
-
 		} else {
-			// implicit factor *= 1.0f;
+			// implicit factor = V3_scale(factor, 1.0f);
+
+			const float roughness = 0.1f;
+			V3 micronormal_tangent = sample_hemisphere_ggx(r1, r2, roughness);
+
+			V3 micronormal = V3_sum(V3_sum(
+						V3_scale(result.normal, micronormal_tangent.z),
+						V3_scale(side,          micronormal_tangent.x)),
+						V3_scale(up,            micronormal_tangent.y));
 
 			V3 view = V3_scale(r.direction, -1.0f);
-			V3 bounce_direction = sample_dirac_reflection(result.normal, view);
-
-			r = (Ray){
-				V3_sum(result.position, V3_scale(bounce_direction, 0.001)),
-				bounce_direction,
-			};
+			V3 bounce_direction = sample_dirac_reflection(micronormal, view);
 		}
 
+		r = (Ray){
+			V3_sum(result.position, V3_scale(bounce_direction, 0.001)),
+			bounce_direction,
+		};
 	}
 
 	// didn't find a light source
