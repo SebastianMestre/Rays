@@ -100,7 +100,7 @@ V3 full_trace (Ray r) {
 		Material material = materials[result.material_id];
 
 		if(material.is_emissive)
-			return material.base_color;
+			return V3_scale3(material.base_color, factor);
 
 		float fresnel = specular_sample_probablity(
 			result.normal,
