@@ -83,24 +83,28 @@ V3 full_trace (Ray r) {
 
 	const V3 sky_color = V3_scale((V3){0.2f, 0.2f, 0.2f}, 10);
 
-	Intersection result = trace(r);
-
-	if (!result.exists) {
-		return sky_color;
-	}
-
 	// TODO: Not so sure about this stuff
 	// inverse of pi = 1.0 / pi =~ 0.31...
 	const float i_pi = 0.31830988618;
 	V3 factor = {1.0f, 1.0f, 1.0f};
 
 	// for up to three bounces, we try to find a light source
-	for(int steps = 0; steps < 3; ++steps){
+	int steps = 0;
+	while(1){
+
+		Intersection result = trace(r);
+
+		if (!result.exists) {
+			return V3_scale3(sky_color, factor);
+		}
 
 		Material material = materials[result.material_id];
 
 		if(material.is_emissive)
 			return V3_scale3(material.base_color, factor);
+
+		if(steps++ == 3)
+			break;
 
 		float fresnel = specular_sample_probablity(
 			result.normal,
@@ -145,12 +149,6 @@ V3 full_trace (Ray r) {
 			};
 		}
 
-		result = trace(r);
-
-		// no hits, found the sky
-		if (!result.exists){
-			return V3_scale3(sky_color, factor);
-		}
 	}
 
 	// didn't find a light source
