@@ -12,8 +12,8 @@
 #include "sampling.h"
 #include "vectors.h"
 
-#define W 256
-#define H 256
+#define W 512
+#define H 512
 
 #define BW 1
 #define BH 1
@@ -21,7 +21,7 @@
 #define BCOLS (W/BW)
 #define BROWS (H/BH)
 
-#define SPP 256
+#define SPP 64
 #define SPB (BW*BH*SPP)
 #define SC (W*H*SPP)
 
@@ -35,24 +35,23 @@ uint8_t g[W][H];
 uint8_t b[W][H];
 Sample samples[BCOLS][BROWS][BW*BH*SPP];
 
-#define PLANE_COUNT 3
+#define PLANE_COUNT 1
 Plane planes[PLANE_COUNT] = {
-	{1, {-1.00f, +0.00f, +0.00f}, {+1.00f, +0.00f, +0.00f}},
 	{0, {+0.00f, -1.00f, +0.00f}, {+0.00f, +1.00f, +0.00f}},
-	{0, {-0.71f, -0.71f, +0.00f}, {+0.71f, +0.71f, +0.00f}},
 };
 
-#define SPHERE_COUNT 2
+#define SPHERE_COUNT 3
 Sphere spheres[SPHERE_COUNT] = {
-	{2, {+1.0f, +0.0f, +5.0f}, 1.0f},
-	{1, {-0.5f, -0.5f, +5.0f}, 1.0f},
+	{2, {+2.5f, +0.0f, +5.0f}, 1.0f},
+	{0, {-2.5f, +0.0f, +5.0f}, 1.0f},
+	{1, {+0.0f, +0.0f, +5.0f}, 1.0f},
 };
 
 #define MATERIAL_COUNT 3
 Material materials[MATERIAL_COUNT] = {
-	{false, {0.80f, 0.80f, 0.80f}, 0.04f},
-	{false, {0.00f, 0.00f, 0.00f}, 0.60f},
-	{true,  {3.00f, 1.00f, 0.50f}, 0.00f}
+	{false, {0.80f, 0.50f, 0.70f}, 0.04f, 0.2f},
+	{false, {0.00f, 0.00f, 0.00f}, 0.70f, 0.05f},
+	{true,  {3.00f, 1.00f, 0.50f}, 0.00f, 0.01f}
 };
 
 Intersection trace (Ray r) {
