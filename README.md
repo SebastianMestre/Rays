@@ -1,7 +1,10 @@
 # rays
-A raytracer, written in C.
 
-No way to load scenes, or choose any settings. It produces the same image every time.
+![sample image](img/helper.bmp)
+
+A toy path tracer, written in C.
+
+No way (other than changing the source) to load scenes, or choose any settings. It produces the same image every time.
 
 WIP.
 
