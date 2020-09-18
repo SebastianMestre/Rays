@@ -41,3 +41,18 @@ float V3_norm2(V3 v){
 V3 V3_normalized(V3 v){
 	return V3_scale(v, 1.0f/V3_norm(v));
 }
+
+
+Mat3 make_look_at_matrix(V3 up, V3 look_at){
+	look_at = V3_normalized(look_at);
+	V3 side = V3_normalized(V3_cross(up, look_at));
+	up = V3_normalized(V3_cross(side, look_at));
+	return (Mat3){ up, side, look_at };
+}
+
+V3 V3_Mat3_mul(V3 vec, Mat3 mat){
+	return V3_sum(V3_sum(
+		V3_scale(mat.x, vec.x),
+		V3_scale(mat.y, vec.y)),
+		V3_scale(mat.z, vec.z));
+}
