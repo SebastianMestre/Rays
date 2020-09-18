@@ -44,14 +44,14 @@ Plane planes[PLANE_COUNT] = {
 Sphere spheres[SPHERE_COUNT] = {
 	{2, {+2.5f, +0.0f, +5.0f}, 1.0f},
 	{0, {-2.5f, +0.0f, +5.0f}, 1.0f},
-	{1, {+0.0f, +0.0f, +5.0f}, 1.0f},
+	{1, {+0.0f, +0.0f, +5.5f}, 1.0f},
 };
 
 #define MATERIAL_COUNT 3
 Material materials[MATERIAL_COUNT] = {
 	{false, {0.80f, 0.50f, 0.70f}, 0.04f, 0.2f},
 	{false, {0.00f, 0.00f, 0.00f}, 0.70f, 0.05f},
-	{true,  {3.00f, 1.00f, 0.50f}, 0.00f, 0.01f}
+	{true,  {12.00f, 4.00f, 2.00f}, 0.00f, 0.01f}
 };
 
 Intersection trace (Ray r) {
@@ -80,7 +80,7 @@ Intersection trace (Ray r) {
 
 V3 full_trace (Ray r) {
 
-	const V3 sky_color = V3_scale((V3){0.3f, 0.6f, 0.9f}, 10);
+	const V3 sky_color = V3_scale((V3){0.3f, 0.6f, 0.9f}, 1);
 	const float i_pi = 0.31830988618;
 	V3 factor = {1.0f, 1.0f, 1.0f};
 
