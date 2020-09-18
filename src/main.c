@@ -110,10 +110,7 @@ V3 full_trace (Ray r) {
 
 		float r0 = random01();
 
-		// tangent space
-		V3 up = (V3){0.0f, 0.0f, 1.0f};
-		V3 side = V3_normalized(V3_cross(up, result.normal));
-		up = V3_normalized(V3_cross(side, result.normal));
+		Mat3 tangent_to_world = make_look_at_matrix((V3){0.0f, 0.0f, 1.0f}, result.normal);
 
 		float r1 = random01();
 		float r2 = random01();
@@ -123,20 +120,12 @@ V3 full_trace (Ray r) {
 			factor = V3_scale3(V3_scale(factor, i_pi), material.base_color);
 
 			V3 bounce_direction_tangent = sample_hemisphere_cosine_weighted(r1, r2);
-
-			V3 bounce_direction = V3_sum(V3_sum(
-						V3_scale(result.normal, bounce_direction_tangent.z),
-						V3_scale(side, bounce_direction_tangent.x)),
-						V3_scale(up, bounce_direction_tangent.y));
+			V3 bounce_direction = V3_Mat3_mul(bounce_direction_tangent, tangent_to_world);
 		} else {
 			// implicit factor = V3_scale(factor, 1.0f);
 
 			V3 micronormal_tangent = sample_hemisphere_ggx(r1, r2, material.roughness);
-
-			V3 micronormal = V3_sum(V3_sum(
-						V3_scale(result.normal, micronormal_tangent.z),
-						V3_scale(side,          micronormal_tangent.x)),
-						V3_scale(up,            micronormal_tangent.y));
+			V3 micronormal = V3_Mat3_mul(micronormal_tangent, tangent_to_world);
 
 			V3 view = V3_scale(r.direction, -1.0f);
 			V3 bounce_direction = sample_dirac_reflection(micronormal, view);
