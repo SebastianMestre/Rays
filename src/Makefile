@@ -13,7 +13,7 @@ OBJNAMES := \
 	vectors.o \
 	bmp.o \
 	sampling.o \
-	random.o
+	prng.o
 
 OBJS := $(addprefix $(OBJDIR)/,$(OBJNAMES))
 
@@ -42,7 +42,7 @@ $(OBJDIR)/%.o: %.c
 
 #### #### #### #### #### #### #### #### #### #### #### #### #### #### #### ####
 
-$(OBJDIR)/main.o: main.c bmp.h geometry.h vectors.h intersection.h sampling.h random.h material.h
+$(OBJDIR)/main.o: main.c bmp.h geometry.h vectors.h intersection.h sampling.h prng.h material.h
 
 $(OBJDIR)/sampling.o: sampling.c sampling.h vectors.h
 sampling.h: vectors.h
@@ -62,8 +62,8 @@ vectors.h:
 $(OBJDIR)/ray.o: ray.c ray.h
 ray.h: vectors.h
 
-$(OBJDIR)/random.o: random.c random.h
-random.h:
+$(OBJDIR)/prng.o: prng.c prng.h
+prng.h:
 
 $(OBJDIR)/material.o: material.c material.h vectors.h
 material.h: vectors.h

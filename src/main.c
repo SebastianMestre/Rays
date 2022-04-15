@@ -8,7 +8,7 @@
 #include "geometry.h"
 #include "intersection.h"
 #include "material.h"
-#include "random.h"
+#include "prng.h"
 #include "sampling.h"
 #include "vectors.h"
 
@@ -78,7 +78,7 @@ Intersection trace (Ray r) {
 	return result;
 }
 
-V3 full_trace (Ray r) {
+V3 full_trace (PrngState* prng, Ray r) {
 
 	const V3 sky_color = V3_scale((V3){0.3f, 0.6f, 0.9f}, 1);
 	const float i_pi = 0.31830988618;
@@ -108,12 +108,12 @@ V3 full_trace (Ray r) {
 			V3_scale(r.direction, -1.0f),
 			material.base_specular);
 
-		float r0 = random01();
+		float r0 = prng_random01(prng);
 
 		Mat3 tangent_to_world = make_look_at_matrix((V3){0.0f, 0.0f, 1.0f}, result.normal);
 
-		float r1 = random01();
-		float r2 = random01();
+		float r1 = prng_random01(prng);
+		float r2 = prng_random01(prng);
 
 		V3 bounce_direction;
 		if(fresnel < r0){
@@ -143,6 +143,8 @@ V3 full_trace (Ray r) {
 
 int main () {
 
+	PrngState prng = { 3141592 };
+
 	V3 camera_pos = {0.0f, 0.0f, 0.0f};
 	V3 camera_up = {0.0f, 0.0f, 1.0f};
 	V3 camera_right = {};
@@ -152,8 +154,8 @@ int main () {
 	for (int bx = 0; bx < BCOLS; ++bx){
 		for (int by = 0; by < BROWS; ++by){
 			for (int sb = 0; sb < SPB; ++sb) {
-				float px_in_bucket = random01();
-				float py_in_bucket = random01();
+				float px_in_bucket = prng_random01(&prng);
+				float py_in_bucket = prng_random01(&prng);
 
 				float px = ((float)bx + px_in_bucket) / (float)BCOLS;
 				float py = ((float)by + py_in_bucket) /  (float)BROWS;
@@ -168,7 +170,7 @@ int main () {
 
 				Ray view = {camera_pos, view_direction};
 
-				V3 color = full_trace(view);
+				V3 color = full_trace(&prng, view);
 				samples[bx][by][sb] = (Sample){color, px, py};
 			}
 		}
