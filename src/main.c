@@ -150,29 +150,32 @@ int main () {
 	V3 camera_right = {};
 	V3 camera_front = {};
 
-	printf("# SPB = %d\n", SPB);
-	for (int bx = 0; bx < BCOLS; ++bx){
-		for (int by = 0; by < BROWS; ++by){
-			for (int sb = 0; sb < SPB; ++sb) {
-				float px_in_bucket = prng_random01(&prng);
-				float py_in_bucket = prng_random01(&prng);
+	int const bucket_count = BCOLS * BROWS;
 
-				float px = ((float)bx + px_in_bucket) / (float)BCOLS;
-				float py = ((float)by + py_in_bucket) /  (float)BROWS;
+	for (int bucket = 0; bucket < bucket_count; ++bucket) {
 
-				V3 screen = {
-					px*2.0f-1.0f,
-					py*2.0f-1.0f,
-					1.0f
-				};
+		int bx = bucket % BCOLS;
+		int by = bucket / BCOLS;
 
-				V3 view_direction = V3_normalized(screen);
+		for (int sb = 0; sb < SPB; ++sb) {
+			float px_in_bucket = prng_random01(&prng);
+			float py_in_bucket = prng_random01(&prng);
 
-				Ray view = {camera_pos, view_direction};
+			float px = ((float)bx + px_in_bucket) / (float)BCOLS;
+			float py = ((float)by + py_in_bucket) /  (float)BROWS;
 
-				V3 color = full_trace(&prng, view);
-				samples[bx][by][sb] = (Sample){color, px, py};
-			}
+			V3 screen = {
+				px*2.0f-1.0f,
+				py*2.0f-1.0f,
+				1.0f
+			};
+
+			V3 view_direction = V3_normalized(screen);
+
+			Ray view = {camera_pos, view_direction};
+
+			V3 color = full_trace(&prng, view);
+			samples[bx][by][sb] = (Sample){color, px, py};
 		}
 	}
 
