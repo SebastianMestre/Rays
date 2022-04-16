@@ -30,12 +30,9 @@ void bmp_write (
 		{
 			int x=i;
 			int y=(h-1)-j;
-			uint8_t r = red[i*w+j]*255;
-			uint8_t g = green[i*w+j]*255;
-			uint8_t b = blue[i*w+j]*255;
-			if (r > 255) r=255;
-			if (g > 255) g=255;
-			if (b > 255) b=255;
+			uint8_t r = 255 - red[i*w+j];
+			uint8_t g = 255 - green[i*w+j];
+			uint8_t b = 255 - blue[i*w+j];
 			img[(x+y*w)*3+2] = (unsigned char)(r);
 			img[(x+y*w)*3+1] = (unsigned char)(g);
 			img[(x+y*w)*3+0] = (unsigned char)(b);
