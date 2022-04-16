@@ -1,5 +1,5 @@
-CFLAGS=-O2
-LIBS=-lm
+CFLAGS=-O2 -Wall
+LIBS=-lm -pthread
 
 BINDIR := ../bin
 OBJDIR := ../build

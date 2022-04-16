@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 #include "bmp.h"
 #include "geometry.h"
@@ -37,6 +38,12 @@ typedef struct {
 	V3 front;
 } CameraSettings;
 
+typedef struct {
+	CameraSettings* camera;
+	uint32_t prng_seed;
+	int first_bucket;
+	int last_bucket;
+} ThreadSettings;
 
 uint8_t r[W][H];
 uint8_t g[W][H];
@@ -124,7 +131,7 @@ V3 full_trace (PrngState* prng, Ray r) {
 		float r2 = prng_random01(prng);
 
 		V3 bounce_direction;
-		if(fresnel < r0){
+		if (fresnel < r0) {
 			factor = V3_scale3(V3_scale(factor, i_pi), material.base_color);
 
 			V3 bounce_direction_tangent = sample_hemisphere_cosine_weighted(r1, r2);
@@ -149,7 +156,7 @@ V3 full_trace (PrngState* prng, Ray r) {
 	return (V3){0.0f, 0.0f, 0.0f};
 }
 
-int trace_buckets(PrngState* prng, CameraSettings* camera, int first_bucket, int last_bucket) {
+void trace_buckets(PrngState* prng, CameraSettings* camera, int first_bucket, int last_bucket) {
 
 	for (int bucket = first_bucket; bucket < last_bucket; ++bucket) {
 
@@ -179,9 +186,20 @@ int trace_buckets(PrngState* prng, CameraSettings* camera, int first_bucket, int
 	}
 }
 
+void* run_thread(void* arg) {
+	ThreadSettings* settings = arg;
+
+	PrngState prng = { settings->prng_seed };
+	trace_buckets(&prng, settings->camera, settings->first_bucket, settings->last_bucket);
+	return NULL;
+}
+
 int main () {
 
-	PrngState prng = { 3141592 };
+	#define MAX_THREADS 4
+
+	pthread_t tids[MAX_THREADS];
+	ThreadSettings thread_settings[MAX_THREADS];
 
 	CameraSettings camera = {
 		.pos = {0.0f, 0.0f, 0.0f},
@@ -192,10 +210,20 @@ int main () {
 
 	int const bucket_count = BCOLS * BROWS;
 
-	int first_bucket = 0;
-	int last_bucket = bucket_count;
+	for (int i = 0; i < MAX_THREADS; ++i) {
+		thread_settings[i] = (ThreadSettings){
+			.camera = &camera,
+			.prng_seed = 2352345 + i * 6547,
+			.first_bucket = (bucket_count * i) / MAX_THREADS,
+			.last_bucket = (bucket_count * (i+1)) / MAX_THREADS,
+		};
 
-	trace_buckets(&prng, &camera, first_bucket, last_bucket);
+		pthread_create(&tids[i], NULL, run_thread, &thread_settings[i]);
+	}
+
+	for (int i = 0; i < MAX_THREADS; ++i) {
+		pthread_join(tids[i], NULL);
+	}
 
 	for (int x = 0; x < W; ++x) {
 		float px = (float)x/(W-1);
