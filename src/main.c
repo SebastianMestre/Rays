@@ -30,6 +30,14 @@ typedef struct {
 	float x,y;
 } Sample;
 
+typedef struct {
+	V3 pos;
+	V3 up;
+	V3 right;
+	V3 front;
+} CameraSettings;
+
+
 uint8_t r[W][H];
 uint8_t g[W][H];
 uint8_t b[W][H];
@@ -141,25 +149,16 @@ V3 full_trace (PrngState* prng, Ray r) {
 	return (V3){0.0f, 0.0f, 0.0f};
 }
 
-int main () {
+int trace_buckets(PrngState* prng, CameraSettings* camera, int first_bucket, int last_bucket) {
 
-	PrngState prng = { 3141592 };
-
-	V3 camera_pos = {0.0f, 0.0f, 0.0f};
-	V3 camera_up = {0.0f, 0.0f, 1.0f};
-	V3 camera_right = {};
-	V3 camera_front = {};
-
-	int const bucket_count = BCOLS * BROWS;
-
-	for (int bucket = 0; bucket < bucket_count; ++bucket) {
+	for (int bucket = first_bucket; bucket < last_bucket; ++bucket) {
 
 		int bx = bucket % BCOLS;
 		int by = bucket / BCOLS;
 
 		for (int sb = 0; sb < SPB; ++sb) {
-			float px_in_bucket = prng_random01(&prng);
-			float py_in_bucket = prng_random01(&prng);
+			float px_in_bucket = prng_random01(prng);
+			float py_in_bucket = prng_random01(prng);
 
 			float px = ((float)bx + px_in_bucket) / (float)BCOLS;
 			float py = ((float)by + py_in_bucket) /  (float)BROWS;
@@ -172,12 +171,31 @@ int main () {
 
 			V3 view_direction = V3_normalized(screen);
 
-			Ray view = {camera_pos, view_direction};
+			Ray view = {camera->pos, view_direction};
 
-			V3 color = full_trace(&prng, view);
+			V3 color = full_trace(prng, view);
 			samples[bx][by][sb] = (Sample){color, px, py};
 		}
 	}
+}
+
+int main () {
+
+	PrngState prng = { 3141592 };
+
+	CameraSettings camera = {
+		.pos = {0.0f, 0.0f, 0.0f},
+		.up = {0.0f, 0.0f, 1.0f},
+		.right = {},
+		.front = {},
+	};
+
+	int const bucket_count = BCOLS * BROWS;
+
+	int first_bucket = 0;
+	int last_bucket = bucket_count;
+
+	trace_buckets(&prng, &camera, first_bucket, last_bucket);
 
 	for (int x = 0; x < W; ++x) {
 		float px = (float)x/(W-1);
