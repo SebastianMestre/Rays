@@ -4,7 +4,7 @@
 #include <math.h>
 
 Intersection no_intersection() {
-	return (Intersection){{},{},false, 0};
+	return (Intersection){{},{},0.0,false, 0};
 }
 
 Intersection intersection_ray_sphere(Ray r, Sphere s) {

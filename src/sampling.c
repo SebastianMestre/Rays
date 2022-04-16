@@ -35,6 +35,7 @@ V3 sample_dirac_reflection(V3 normal, V3 view) {
 	float ndotv = V3_dot(normal, view);
 
 	V3 result = V3_sub(V3_scale(normal, 2.0f * ndotv), view);
+	return result;
 }
 
 V3 sample_hemisphere_ggx(float r1, float r2, float roughness) {

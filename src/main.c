@@ -128,7 +128,7 @@ V3 full_trace (PrngState* prng, Ray r) {
 			factor = V3_scale3(V3_scale(factor, i_pi), material.base_color);
 
 			V3 bounce_direction_tangent = sample_hemisphere_cosine_weighted(r1, r2);
-			V3 bounce_direction = V3_Mat3_mul(bounce_direction_tangent, tangent_to_world);
+			bounce_direction = V3_Mat3_mul(bounce_direction_tangent, tangent_to_world);
 		} else {
 			// implicit factor = V3_scale(factor, 1.0f);
 
@@ -136,7 +136,7 @@ V3 full_trace (PrngState* prng, Ray r) {
 			V3 micronormal = V3_Mat3_mul(micronormal_tangent, tangent_to_world);
 
 			V3 view = V3_scale(r.direction, -1.0f);
-			V3 bounce_direction = sample_dirac_reflection(micronormal, view);
+			bounce_direction = sample_dirac_reflection(micronormal, view);
 		}
 
 		r = (Ray){
